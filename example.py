@@ -1,58 +1,47 @@
-import nmap,argparse, sys
-class INFO:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    ARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-
-
-
-
-def scan_port(host, port):
-    nm = nmap.PortScanner()
-    try:
-        result= nm.scan(host,port)
-        print (result)
-        state = result['scan'][host]['tcp'][int(port)]['state']
-        if state == 'open':
-            print (INFO.OKBLUE+'[*] '+host+ ' tcp/'+port+" "+state+INFO.ENDC)
-        else:
-            print (INFO.WARNING + '[*] ' + host + ' tcp/' + port + " " + state + INFO.ENDC)
-    except e:
-        raise e
-
-def get_args():
-    parger = argparse.ArgumentParser(description='port scan script')
-    parger.add_argument('-H', '--host', help='specify target host')
-    parger.add_argument('-P', '--port', help='specify target port')
-    args = parger.parse_args()
-    print (args)
-    if args.host == None:
-        parger.error('host is required')
-        sys.exit()
-    if args.port == None:
-        parger.error('host is required')
-        sys.exit()
-    else:
-        return args
-
-
+import argparse
+import threading
+import socket
+from socket import *
 def main():
-    args = get_args()
-    if '-' in args.port:
-        ports_list = args.port.split('-')
-        for p in range(int(ports_list[0]),int(ports_list[1])+1):
-            scan_port(args.host, str(p))
-    else:
-        ports_list = args.port.split(',')
-        for p in ports_list:
-            scan_port(args.host, p)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-H',dest='targetHost',type=str,help='目标主机')
+    parser.add_argument('-P',dest='targetPorts',type=int,nargs='+',help='目标端口')
+    args = parser.parse_args()
+    targetHost = args.targetHost
+    targetPorts = args.targetPorts
+    if (targetHost == None) or (targetPorts[0] == None):
+        print('\n你必须传入一个主机名或地址及端口号')
+        exit(0)
+    #扫描开始--------------------
+    print('连接主机' + targetHost)
+    portScan(targetHost,targetPorts)
+    #---------------------------
+def connScan(targetHost,targetPort):
+    try:
+        connSkt = socket(AF_INET,SOCK_STREAM)
+        connSkt.connect((targetHost,targetPort))
+        connSkt.send("ViolentPython\r\n".encode())
+        results = connSkt.recv(100)
+        print('%d/TCP open' % targetPort)
+        print(str(results))
+        connSkt.close()
+    except:
+        print('%d/TCP closed' % targetPort)
 
-
+def portScan(targetHost,targetPorts):
+    try:
+        targetIP = gethostbyname(targetHost)
+    except:
+        print('Can not resolve %s: Unknow host' % targetHost)
+        return
+    try:
+        targetName = gethostbyaddr(targetIP)
+        print('Scan result for:' + targetName)
+    except:
+        print('Scan result for:' + targetIP)
+    setdefaulttimeout(1)
+    for targetPort in targetPorts:
+        print('ScanPort:' + str(targetPort))
+        connScan(targetHost,targetPort)
 if __name__ == '__main__':
     main()
