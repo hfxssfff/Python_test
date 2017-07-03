@@ -4,10 +4,10 @@ import nmap
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-H',dest='targetHost',type=str,help='目标主机')
-    parser.add_argument('-P',dest='targetPorts',type=int,nargs='+',help='目标端口')
+    parser.add_argument('-P',dest='targetPort',type=str,help='目标端口')
     args = parser.parse_args()
     targetHost = args.targetHost
-    targetPorts = args.targetPorts
+    targetPorts = str(args.targetPort).split(',')
     if (targetHost == None) or (targetPorts[0] == None):
         print('\n你必须传入一个主机名或地址及端口号')
         exit(0)
@@ -17,8 +17,8 @@ def main():
     #---------------------------
 def nmapScan(targetHost,targetPort):
     nmScan = nmap.PortScanner()
-    nmScan.scan(targetHost,str(targetPort))
-    state = nmScan[targetHost]['tcp'][targetPort]['state']
-    print(targetHost + 'tcp/' + str(targetPort) + state)
+    nmScan.scan(targetHost,targetPort)
+    state = nmScan[targetHost]['tcp'][int(targetPort)]['state']
+    print('[*]' + targetHost + ' tcp/' + targetPort + ' ' + state)
 if __name__ == '__main__':
     main()

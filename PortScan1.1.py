@@ -28,7 +28,7 @@ def connScan(targetHost,targetPort):
     try:
         connSkt = socket(AF_INET,SOCK_STREAM)
         connSkt.connect((targetHost,targetPort))
-        print('端口开放%s' % str(targetPort))
+        print('%s 端口开放' % str(targetPort))
         openNum = openNum + 1
         lock.acquire()
         print('%d/TCP open' % targetPort)
